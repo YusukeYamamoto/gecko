@@ -43,6 +43,8 @@
 #include "WifiWorker.h"
 #include "mozilla/Services.h"
 
+#include "android/log.h"
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
 USING_WORKERS_NAMESPACE
 
 using namespace mozilla::dom::gonk;
@@ -176,6 +178,7 @@ public:
   { }
 
   virtual void MessageReceived(NetdCommand *aMessage) {
+    NS_WARNING("+++DBG++:SystemWorkerManager.cpp:INetdReceiver:MessageReceived()");
     nsRefPtr<DispatchNetdEvent> dre(new DispatchNetdEvent(aMessage));
     if (!mDispatcher->PostTask(dre)) {
       NS_WARNING("Failed to PostTask to net worker");
@@ -222,6 +225,8 @@ SystemWorkerManager::~SystemWorkerManager()
 nsresult
 SystemWorkerManager::Init()
 {
+  LOG("+++DBG++:SystemWorkerManager.cpp:Init()-S");
+  
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -258,12 +263,14 @@ SystemWorkerManager::Init()
     return rv;
   }
 
+  LOG("+++DBG++:SystemWorkerManager.cpp:Init()-E");
   return NS_OK;
 }
 
 void
 SystemWorkerManager::Shutdown()
 {
+  LOG("+++DBG++:SystemWorkerManager.cpp:Shutdown()-S");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   mShutdown = true;
@@ -298,6 +305,7 @@ SystemWorkerManager::Shutdown()
 already_AddRefed<SystemWorkerManager>
 SystemWorkerManager::FactoryCreate()
 {
+  LOG("+++DBG++:SystemWorkerManager.cpp:FactoryCreate()-S");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsRefPtr<SystemWorkerManager> instance(gInstance);
@@ -312,6 +320,7 @@ SystemWorkerManager::FactoryCreate()
     gInstance = instance;
   }
 
+  LOG("+++DBG++:SystemWorkerManager.cpp:FactoryCreate()-E");
   return instance.forget();
 }
 
@@ -319,12 +328,14 @@ SystemWorkerManager::FactoryCreate()
 nsIInterfaceRequestor*
 SystemWorkerManager::GetInterfaceRequestor()
 {
+  LOG("+++DBG++:SystemWorkerManager.cpp:GetInterfaceRequestor()");
   return gInstance;
 }
 
 NS_IMETHODIMP
 SystemWorkerManager::GetInterface(const nsIID &aIID, void **aResult)
 {
+  LOG("+++DBG++:SystemWorkerManager.cpp:SystemWorkerManager()-S");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (aIID.Equals(NS_GET_IID(nsIWifi))) {
@@ -337,6 +348,7 @@ SystemWorkerManager::GetInterface(const nsIID &aIID, void **aResult)
                               reinterpret_cast<nsINetworkService**>(aResult));
   }
 
+  LOG("+++DBG++:SystemWorkerManager.cpp:SystemWorkerManager()-E");
   NS_WARNING("Got nothing for the requested IID!");
   return NS_ERROR_NO_INTERFACE;
 }
@@ -389,9 +401,13 @@ SystemWorkerManager::RegisterNfcWorker(const JS::Value& aWorker,
 nsresult
 SystemWorkerManager::InitNetd(JSContext *cx)
 {
+  LOG("+++DBG++:SystemWorkerManager.cpp:InitNetd()-S");
+  LOG("+++DBG++:SystemWorkerManager.cpp:kNetworkServiceCID is %d", kNetworkServiceCID);
+  LOG("+++DBG++:SystemWorkerManager.cpp:do_GetService call------");
   nsCOMPtr<nsIWorkerHolder> worker = do_GetService(kNetworkServiceCID);
   NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
 
+  LOG("+++DBG++:SystemWorkerManager.cpp:GetWorker call------");
   JS::Value workerval;
   nsresult rv = worker->GetWorker(&workerval);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -399,33 +415,42 @@ SystemWorkerManager::InitNetd(JSContext *cx)
 
   JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(workerval));
 
+  LOG("+++DBG++:SystemWorkerManager.cpp:GetWorkerCrossThreadDispatcher call------");
   WorkerCrossThreadDispatcher *wctd =
     GetWorkerCrossThreadDispatcher(cx, workerval);
   if (!wctd) {
     NS_WARNING("Failed to GetWorkerCrossThreadDispatcher for netd");
+    LOG("+++DBG++:SystemWorkerManager.cpp:InitNetd()-E_return");
     return NS_ERROR_FAILURE;
   }
 
+  LOG("+++DBG++:SystemWorkerManager.cpp:ConnectWorkerToNetd instance get------");
   nsRefPtr<ConnectWorkerToNetd> connection = new ConnectWorkerToNetd();
   if (!wctd->PostTask(connection)) {
     NS_WARNING("Failed to connect worker to netd");
+    LOG("+++DBG++:SystemWorkerManager.cpp:InitNetd()-E_return");
     return NS_ERROR_UNEXPECTED;
   }
 
+  LOG("+++DBG++:SystemWorkerManager.cpp:NetdReceiver instance get------");
   // Now that we're set up, connect ourselves to the Netd process.
   mozilla::RefPtr<NetdReceiver> receiver = new NetdReceiver(wctd);
   StartNetd(receiver);
   mNetdWorker = worker;
+  LOG("+++DBG++:SystemWorkerManager.cpp:InitNetd()-E");
   return NS_OK;
 }
 
 nsresult
 SystemWorkerManager::InitWifi(JSContext *cx)
 {
-  nsCOMPtr<nsIWorkerHolder> worker = do_CreateInstance(kWifiWorkerCID);
+  LOG("+++DBG++:SystemWorkerManager.cpp:InitWifi()-S");
+  LOG("+++DBG++:SystemWorkerManager.cpp:kWifiWorkerCID is %d ", kNetworkServiceCID );
+   nsCOMPtr<nsIWorkerHolder> worker = do_CreateInstance(kWifiWorkerCID);
   NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
 
   mWifiWorker = worker;
+  LOG("+++DBG++:SystemWorkerManager.cpp:InitWifi()-E");
   return NS_OK;
 }
 

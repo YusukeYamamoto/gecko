@@ -19,6 +19,7 @@
 #include "mozilla/Likely.h"
 #include <stdarg.h>
 
+// DEBUG=true;
 #ifdef DEBUG
 #include "prprf.h"
 #endif

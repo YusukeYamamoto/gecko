@@ -1682,8 +1682,10 @@ RadioInterface.prototype = {
    *   4. Create RilNetworkInterface for each APN setting created at step 2.
    */
   updateApnSettings: function updateApnSettings(allApnSettings) {
-    let simApnSettings = allApnSettings[this.clientId];
+      console.log("++DBG++:RadioInterfaceLayer.js:updateApnSettings()-S");
+      let simApnSettings = allApnSettings[this.clientId];
     if (!simApnSettings) {
+      console.log("++DBG++:RadioInterfaceLayer.js:updateApnSettings()-E_return");
       return;
     }
 
@@ -1691,6 +1693,8 @@ RadioInterface.prototype = {
     for each (let apnSetting in this.apnSettings.byApn) {
       // Clear all existing connections based on APN types.
       for each (let type in apnSetting.types) {
+      console.log("++DBG++:RadioInterfaceLayer.js:aonSettings.types is " + apnSetting.types );
+      let simApnSettings = allApnSettings[this.clientId];
         if (this.getDataCallStateByType(type) ==
             RIL.GECKO_NETWORK_STATE_CONNECTED) {
           this.deactivateDataCallByType(type);
@@ -1736,16 +1740,19 @@ RadioInterface.prototype = {
     for each (let apnSetting in this.apnSettings.byApn) {
       apnSetting.iface = new RILNetworkInterface(this, apnSetting);
     }
+    console.log("++DBG++:RadioInterfaceLayer.js:updateApnSettings()-E");
   },
 
   /**
    * Check if we get all necessary APN data.
    */
   validateApnSetting: function validateApnSetting(apnSetting) {
-    return (apnSetting &&
+    /*return (apnSetting &&
             apnSetting.apn &&
             apnSetting.types &&
             apnSetting.types.length);
+    */
+      return true;
   },
 
   handleDataClientIdChange: function handleDataClientIdChange() {
@@ -3441,6 +3448,7 @@ RadioInterface.prototype = {
       if (apnSetting.iface.name in gNetworkManager.networkInterfaces) {
         gNetworkManager.unregisterNetworkInterface(apnSetting.iface);
       }
+      console.log("++DBG++:RadioInterfaceLayer:setupDataCallByType called!!");
       gNetworkManager.registerNetworkInterface(apnSetting.iface);
 
       Services.obs.notifyObservers(apnSetting.iface,
@@ -3475,6 +3483,7 @@ RadioInterface.prototype = {
       if (apnSetting.iface.name in gNetworkManager.networkInterfaces) {
         gNetworkManager.unregisterNetworkInterface(apnSetting.iface);
       }
+      console.log("++DBG++:RadioInterfaceLayer:deactivateDataCallByType called!!");
       gNetworkManager.registerNetworkInterface(apnSetting.iface);
 
       Services.obs.notifyObservers(apnSetting.iface,
@@ -3714,6 +3723,7 @@ RILNetworkInterface.prototype = {
         this.dns2 = datacall.dns[1];
       }
       if (!this.registeredAsNetworkInterface) {
+        console.log("++DBG++:RadioInterfaceLayer:dataCallStateChanged called!!");
         gNetworkManager.registerNetworkInterface(this);
         this.registeredAsNetworkInterface = true;
       }

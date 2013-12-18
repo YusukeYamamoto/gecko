@@ -28,7 +28,7 @@ const WIFI_CTRL_INTERFACE = "wl0.1";
 
 const MANUAL_PROXY_CONFIGURATION = 1;
 
-const DEBUG = false;
+const DEBUG = true;
 
 function netdResponseType(code) {
   return Math.floor(code / 100) * 100;
@@ -48,6 +48,7 @@ function debug(msg) {
  * adjusts routes etc. accordingly.
  */
 function NetworkService() {
+  debug("+++DBG++:NetworkService.js:NetworkService()-S");
   if(DEBUG) debug("Starting net_worker.");
   this.worker = new ChromeWorker("resource://gre/modules/net_worker.js");
   this.worker.onmessage = this.handleWorkerMessage.bind(this);
@@ -60,6 +61,7 @@ function NetworkService() {
 
   // Callbacks to invoke when a reply arrives from the net_worker.
   this.controlCallbacks = Object.create(null);
+  debug("+++DBG++:NetworkService.js:NetworkService()-E");
 }
 
 NetworkService.prototype = {
@@ -80,20 +82,24 @@ NetworkService.prototype = {
 
   idgen: 0,
   controlMessage: function controlMessage(params, callback) {
+    debug("+++DBG++:NetworkService.js:controlMessage()-S");
     if (callback) {
       let id = this.idgen++;
       params.id = id;
       this.controlCallbacks[id] = callback;
     }
     this.worker.postMessage(params);
+    debug("+++DBG++:NetworkService.js:controlMessage()-E");
   },
 
   handleWorkerMessage: function handleWorkerMessage(e) {
+    debug("+++DBG++:NetworkService.js:handleWorkerMessage()-S");
     if(DEBUG) debug("NetworkManager received message from worker: " + JSON.stringify(e.data));
     let response = e.data;
     let id = response.id;
     if (id === 'broadcast') {
       Services.obs.notifyObservers(null, response.topic, response.reason);
+      debug("+++DBG++:NetworkService.js:handleWorkerMessage()-E_return");
       return;
     }
     let callback = this.controlCallbacks[id];
@@ -101,11 +107,13 @@ NetworkService.prototype = {
       callback.call(this, response);
       delete this.controlCallbacks[id];
     }
+    debug("+++DBG++:NetworkService.js:handleWorkerMessage()-E");
   },
 
   // nsINetworkService
 
   getNetworkInterfaceStats: function getNetworkInterfaceStats(networkName, callback) {
+    debug("+++DBG++:NetworkService.js:getNetworkInterfaceStats()-S");
     if(DEBUG) debug("getNetworkInterfaceStats for " + networkName);
 
     let params = {
@@ -121,9 +129,11 @@ NetworkService.prototype = {
       callback.networkStatsAvailable(success, result.rxBytes,
                                      result.txBytes, result.date);
     });
+    debug("+++DBG++:NetworkService.js:getNetworkInterfaceStats()-E");
   },
 
   setNetworkInterfaceAlarm: function setNetworkInterfaceAlarm(networkName, threshold, callback) {
+    debug("+++DBG++:NetworkService.js:setNetworkInterfaceAlarm()-S");
     if (!networkName) {
       callback.networkUsageAlarmResult(-1);
       return;
@@ -131,10 +141,12 @@ NetworkService.prototype = {
 
     if (threshold < 0) {
       this._disableNetworkInterfaceAlarm(networkName, callback);
+      debug("+++DBG++:NetworkService.js:setNetworkInterfaceAlarm()-E_return");
       return;
     }
 
     this._setNetworkInterfaceAlarm(networkName, threshold, callback);
+    debug("+++DBG++:NetworkService.js:setNetworkInterfaceAlarm()-E");
   },
 
   _setNetworkInterfaceAlarm: function _setNetworkInterfaceAlarm(networkName, threshold, callback) {
@@ -201,6 +213,7 @@ NetworkService.prototype = {
   },
 
   setWifiOperationMode: function setWifiOperationMode(interfaceName, mode, callback) {
+    debug("+++DBG++:NetworkService.js:setWifiOperationMode()-S");
     if(DEBUG) debug("setWifiOperationMode on " + interfaceName + " to " + mode);
 
     let params = {
@@ -219,11 +232,14 @@ NetworkService.prototype = {
         callback.wifiOperationModeResult(null);
       }
     });
+    debug("+++DBG++:NetworkService.js:setWifiOperationMode()-E");
   },
 
   resetRoutingTable: function resetRoutingTable(network) {
+    debug("+++DBG++:NetworkService.js:resetRoutingTable()-S");
     if (!network.ip || !network.netmask) {
       if(DEBUG) debug("Either ip or netmask is null. Cannot reset routing table.");
+      debug("+++DBG++:NetworkService.js:resetRoutingTable()-S_return");
       return;
     }
     let options = {
@@ -233,9 +249,11 @@ NetworkService.prototype = {
       netmask: network.netmask
     };
     this.worker.postMessage(options);
+    debug("+++DBG++:NetworkService.js:resetRoutingTable()-E");
   },
 
   setDNS: function setDNS(networkInterface) {
+    debug("+++DBG++:NetworkService.js:setDNS()-S");
     if(DEBUG) debug("Going DNS to " + networkInterface.name);
     let options = {
       cmd: "setDNS",
@@ -244,9 +262,11 @@ NetworkService.prototype = {
       dns2_str: networkInterface.dns2
     };
     this.worker.postMessage(options);
+    debug("+++DBG++:NetworkService.js:setDNS()-E");
   },
 
   setDefaultRouteAndDNS: function setDefaultRouteAndDNS(network, oldInterface) {
+    debug("+++DBG++:NetworkService.js:setDefaultRouteAndDNS()-S");
     if(DEBUG) debug("Going to change route and DNS to " + network.name);
     let options = {
       cmd: "setDefaultRouteAndDNS",
@@ -258,18 +278,22 @@ NetworkService.prototype = {
     };
     this.worker.postMessage(options);
     this.setNetworkProxy(network);
+    debug("+++DBG++:NetworkService.js:setDefaultRouteAndDNS()-E");
   },
 
   removeDefaultRoute: function removeDefaultRoute(ifname) {
+    debug("+++DBG++:NetworkService.js:removeDefaultRoute()-S");
     if(DEBUG) debug("Remove default route for " + ifname);
     let options = {
       cmd: "removeDefaultRoute",
       ifname: ifname
     };
     this.worker.postMessage(options);
+    debug("+++DBG++:NetworkService.js:removeDefaultRoute()-E");
   },
 
   addHostRoute: function addHostRoute(network) {
+    debug("+++DBG++:NetworkService.js:addHostRoute()-S");
     if(DEBUG) debug("Going to add host route on " + network.name);
     let options = {
       cmd: "addHostRoute",
@@ -278,9 +302,11 @@ NetworkService.prototype = {
       hostnames: [network.dns1, network.dns2, network.httpProxyHost]
     };
     this.worker.postMessage(options);
+    debug("+++DBG++:NetworkService.js:addHostRoute()-E");
   },
 
   removeHostRoute: function removeHostRoute(network) {
+    debug("+++DBG++:NetworkService.js:removeHostRoute()-S");
     if(DEBUG) debug("Going to remove host route on " + network.name);
     let options = {
       cmd: "removeHostRoute",
@@ -289,18 +315,22 @@ NetworkService.prototype = {
       hostnames: [network.dns1, network.dns2, network.httpProxyHost]
     };
     this.worker.postMessage(options);
+    debug("+++DBG++:NetworkService.js:removeHostRoute()-E");
   },
 
   removeHostRoutes: function removeHostRoutes(ifname) {
+    debug("+++DBG++:NetworkService.js:removeHostRoutes()-S");
     if(DEBUG) debug("Going to remove all host routes on " + ifname);
     let options = {
       cmd: "removeHostRoutes",
       ifname: ifname,
     };
     this.worker.postMessage(options);
+    debug("+++DBG++:NetworkService.js:removeHostRoutes()-E");
   },
 
   addHostRouteWithResolve: function addHostRouteWithResolve(network, hosts) {
+    debug("+++DBG++:NetworkService.js:addHostRouteWithResolve()-S");
     if(DEBUG) debug("Going to add host route after dns resolution on " + network.name);
     let options = {
       cmd: "addHostRoute",
@@ -309,9 +339,11 @@ NetworkService.prototype = {
       hostnames: hosts
     };
     this.worker.postMessage(options);
+    debug("+++DBG++:NetworkService.js:addHostRouteWithResolve()-S");
   },
 
   removeHostRouteWithResolve: function removeHostRouteWithResolve(network, hosts) {
+    debug("+++DBG++:NetworkService.js:removeHostRouteWithResolve()-S");
     if(DEBUG) debug("Going to remove host route after dns resolution on " + network.name);
     let options = {
       cmd: "removeHostRoute",
@@ -320,9 +352,11 @@ NetworkService.prototype = {
       hostnames: hosts
     };
     this.worker.postMessage(options);
+    debug("+++DBG++:NetworkService.js:removeHostRouteWithResolve()-E");
   },
 
   setNetworkProxy: function setNetworkProxy(network) {
+    debug("+++DBG++:NetworkService.js:setNetworkProxy()-S");
     try {
       if (!network.httpProxyHost || network.httpProxyHost === "") {
         // Sets direct connection to internet.
@@ -333,6 +367,7 @@ NetworkService.prototype = {
         Services.prefs.clearUserPref("network.proxy.ssl");
         Services.prefs.clearUserPref("network.proxy.ssl_port");
         if(DEBUG) debug("No proxy support for " + network.name + " network interface.");
+        debug("+++DBG++:NetworkService.js:setNetworkProxy()-E_return");
         return;
       }
 
@@ -350,10 +385,12 @@ NetworkService.prototype = {
         if(DEBUG) debug("Exception " + ex + ". Unable to set proxy setting for " +
                          network.name + " network interface.");
     }
+    debug("+++DBG++:NetworkService.js:setNetworkProxy()-E");
   },
 
   // Enable/Disable DHCP server.
   setDhcpServer: function setDhcpServer(enabled, config, callback) {
+    debug("+++DBG++:NetworkService.js:setDhcpServer()-S");
     if (null === config) {
       config = {};
     }
@@ -365,14 +402,17 @@ NetworkService.prototype = {
     this.controlMessage(config, function setDhcpServerResult(response) {
       if (!response.success) {
         callback.dhcpServerResult('Set DHCP server error');
+        debug("+++DBG++:NetworkService.js:setDhcpServer()-E_return");
         return;
       }
       callback.dhcpServerResult(null);
     });
+    debug("+++DBG++:NetworkService.js:setDhcpServer()-E");
   },
 
   // Enable/disable WiFi tethering by sending commands to netd.
   setWifiTethering: function setWifiTethering(enable, config, callback) {
+    debug("+++DBG++:NetworkService.js:setWifiTethering()-S");
     // config should've already contained:
     //   .ifname
     //   .internalIfname
@@ -396,10 +436,12 @@ NetworkService.prototype = {
         callback.wifiTetheringEnabledChange(null);
       }
     });
+    debug("+++DBG++:NetworkService.js:setWifiTethering()-E");
   },
 
   // Enable/disable USB tethering by sending commands to netd.
   setUSBTethering: function setUSBTethering(enable, config, callback) {
+    debug("+++DBG++:NetworkService.js:setWifiTethering()-S");
     config.cmd = "setUSBTethering";
     // The callback function in controlMessage may not be fired immediately.
     config.isAsync = true;
@@ -417,10 +459,12 @@ NetworkService.prototype = {
         callback.usbTetheringEnabledChange(null);
       }
     });
+    debug("+++DBG++:NetworkService.js:setUSBTethering()-E");
   },
 
   // Switch usb function by modifying property of persist.sys.usb.config.
   enableUsbRndis: function enableUsbRndis(enable, callback) {
+    debug("+++DBG++:NetworkService.js:enableUsbRndis()-S");
     if(DEBUG) debug("enableUsbRndis: " + enable);
 
     let params = {
@@ -440,9 +484,11 @@ NetworkService.prototype = {
     this.controlMessage(params, function (data) {
       callback.enableUsbRndisResult(data.result, data.enable);
     });
+    debug("+++DBG++:NetworkService.js:enableUsbRndis()-E");
   },
 
   updateUpStream: function updateUpStream(previous, current, callback) {
+    debug("+++DBG++:NetworkService.js:updateUpStream()-S");
     let params = {
       cmd: "updateUpStream",
       isAsync: true,
@@ -456,6 +502,7 @@ NetworkService.prototype = {
       if(DEBUG) debug("updateUpStream result: Code " + code + " reason " + reason);
       callback.updateUpStreamResult(!isError(code), data.current.externalIfname);
     });
+    debug("+++DBG++:NetworkService.js:updateUpStream()-E");
   },
 };
 

@@ -97,6 +97,7 @@ MobileConnection::MobileConnection(uint32_t aClientId)
 void
 MobileConnection::Init(nsPIDOMWindow* aWindow)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:Init()");
   BindToOwner(aWindow);
 
   mWindow = do_GetWeakReference(aWindow);
@@ -115,6 +116,7 @@ MobileConnection::Init(nsPIDOMWindow* aWindow)
 void
 MobileConnection::Shutdown()
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:Shutdown()");
   if (mProvider && mListener) {
     mListener->Disconnect();
     mProvider->UnregisterMobileConnectionMsg(mClientId, mListener);
@@ -128,6 +130,7 @@ MobileConnection::Shutdown()
 NS_IMETHODIMP
 MobileConnection::GetLastKnownNetwork(nsAString& aNetwork)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetLastKnownNetwork()");
   aNetwork.SetIsVoid(true);
 
   if (!CheckPermission("mobilenetwork")) {
@@ -141,6 +144,7 @@ MobileConnection::GetLastKnownNetwork(nsAString& aNetwork)
 NS_IMETHODIMP
 MobileConnection::GetLastKnownHomeNetwork(nsAString& aNetwork)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetLastKnownHomeNetwork()");
   aNetwork.SetIsVoid(true);
 
   if (!CheckPermission("mobilenetwork")) {
@@ -156,6 +160,7 @@ MobileConnection::GetLastKnownHomeNetwork(nsAString& aNetwork)
 bool
 MobileConnection::CheckPermission(const char* aType)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:CheckPermission()");
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, false);
 
@@ -171,6 +176,7 @@ MobileConnection::CheckPermission(const char* aType)
 NS_IMETHODIMP
 MobileConnection::GetVoice(nsIDOMMozMobileConnectionInfo** aVoice)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetVoice()");
   *aVoice = nullptr;
 
   if (!mProvider || !CheckPermission("mobileconnection")) {
@@ -182,6 +188,7 @@ MobileConnection::GetVoice(nsIDOMMozMobileConnectionInfo** aVoice)
 NS_IMETHODIMP
 MobileConnection::GetData(nsIDOMMozMobileConnectionInfo** aData)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetData()");
   *aData = nullptr;
 
   if (!mProvider || !CheckPermission("mobileconnection")) {
@@ -193,6 +200,7 @@ MobileConnection::GetData(nsIDOMMozMobileConnectionInfo** aData)
 NS_IMETHODIMP
 MobileConnection::GetIccId(nsAString& aIccId)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetIccId()");
   aIccId.SetIsVoid(true);
 
   if (!mProvider || !CheckPermission("mobileconnection")) {
@@ -204,6 +212,7 @@ MobileConnection::GetIccId(nsAString& aIccId)
 NS_IMETHODIMP
 MobileConnection::GetNetworkSelectionMode(nsAString& aNetworkSelectionMode)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetNetworkSelectionMode()");
   aNetworkSelectionMode.SetIsVoid(true);
 
   if (!mProvider || !CheckPermission("mobileconnection")) {
@@ -215,6 +224,7 @@ MobileConnection::GetNetworkSelectionMode(nsAString& aNetworkSelectionMode)
 NS_IMETHODIMP
 MobileConnection::GetRadioState(nsAString& aRadioState)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetRadioState()");
   aRadioState.SetIsVoid(true);
 
   if (!mProvider || !CheckPermission("mobileconnection")) {
@@ -226,6 +236,7 @@ MobileConnection::GetRadioState(nsAString& aRadioState)
 NS_IMETHODIMP
 MobileConnection::GetNetworks(nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetNetworks()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -242,6 +253,7 @@ MobileConnection::GetNetworks(nsIDOMDOMRequest** aRequest)
 NS_IMETHODIMP
 MobileConnection::SelectNetwork(nsIDOMMozMobileNetworkInfo* aNetwork, nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:SelectNetwork()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -258,6 +270,7 @@ MobileConnection::SelectNetwork(nsIDOMMozMobileNetworkInfo* aNetwork, nsIDOMDOMR
 NS_IMETHODIMP
 MobileConnection::SelectNetworkAutomatically(nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:SelectNetworkAutomatically()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -274,6 +287,7 @@ MobileConnection::SelectNetworkAutomatically(nsIDOMDOMRequest** aRequest)
 NS_IMETHODIMP
 MobileConnection::SetRoamingPreference(const nsAString& aMode, nsIDOMDOMRequest** aDomRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:SetRoamingPreference()");
   *aDomRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -290,6 +304,7 @@ MobileConnection::SetRoamingPreference(const nsAString& aMode, nsIDOMDOMRequest*
 NS_IMETHODIMP
 MobileConnection::GetRoamingPreference(nsIDOMDOMRequest** aDomRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetRoamingPreference()");
   *aDomRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -306,6 +321,7 @@ MobileConnection::GetRoamingPreference(nsIDOMDOMRequest** aDomRequest)
 NS_IMETHODIMP
 MobileConnection::SetVoicePrivacyMode(bool aEnabled, nsIDOMDOMRequest** aDomRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:SetVoicePrivacyMode()");
   *aDomRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -322,6 +338,7 @@ MobileConnection::SetVoicePrivacyMode(bool aEnabled, nsIDOMDOMRequest** aDomRequ
 NS_IMETHODIMP
 MobileConnection::GetVoicePrivacyMode(nsIDOMDOMRequest** aDomRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetVoicePrivacyMode()");
   *aDomRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -339,6 +356,7 @@ NS_IMETHODIMP
 MobileConnection::SendMMI(const nsAString& aMMIString,
                           nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:SendMMI()");
   if (!CheckPermission("mobileconnection")) {
     return NS_OK;
   }
@@ -353,6 +371,7 @@ MobileConnection::SendMMI(const nsAString& aMMIString,
 NS_IMETHODIMP
 MobileConnection::CancelMMI(nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:CancelMMI()");
   if (!CheckPermission("mobileconnection")) {
     return NS_OK;
   }
@@ -368,6 +387,7 @@ NS_IMETHODIMP
 MobileConnection::GetCallForwardingOption(uint16_t aReason,
                                           nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetCallForwardingOption()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -385,6 +405,7 @@ NS_IMETHODIMP
 MobileConnection::SetCallForwardingOption(nsIDOMMozMobileCFInfo* aCFInfo,
                                           nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:SetCallForwardingOption()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -402,6 +423,7 @@ NS_IMETHODIMP
 MobileConnection::GetCallBarringOption(const JS::Value& aOption,
                                        nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetCallBarringOption()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -419,6 +441,7 @@ NS_IMETHODIMP
 MobileConnection::SetCallBarringOption(const JS::Value& aOption,
                                        nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:SetCallBarringOption()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -436,6 +459,7 @@ NS_IMETHODIMP
 MobileConnection::ChangeCallBarringPassword(const JS::Value& aInfo,
                                             nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:ChangeCallBarringPassword()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -452,6 +476,7 @@ MobileConnection::ChangeCallBarringPassword(const JS::Value& aInfo,
 NS_IMETHODIMP
 MobileConnection::GetCallWaitingOption(nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetCallWaitingOption()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -469,6 +494,7 @@ NS_IMETHODIMP
 MobileConnection::SetCallWaitingOption(bool aEnabled,
                                        nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:SetCallWaitingOption()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -485,6 +511,7 @@ MobileConnection::SetCallWaitingOption(bool aEnabled,
 NS_IMETHODIMP
 MobileConnection::GetCallingLineIdRestriction(nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:GetCallingLineIdRestriction()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -502,6 +529,7 @@ NS_IMETHODIMP
 MobileConnection::SetCallingLineIdRestriction(unsigned short aClirMode,
                                               nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:SetCallingLineIdRestriction()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -518,6 +546,7 @@ MobileConnection::SetCallingLineIdRestriction(unsigned short aClirMode,
 NS_IMETHODIMP
 MobileConnection::ExitEmergencyCbMode(nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:ExitEmergencyCbMode()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -535,6 +564,7 @@ NS_IMETHODIMP
 MobileConnection::SetRadioEnabled(bool aEnabled,
                                   nsIDOMDOMRequest** aRequest)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:SetRadioEnabled()");
   *aRequest = nullptr;
 
   if (!CheckPermission("mobileconnection")) {
@@ -553,6 +583,7 @@ MobileConnection::SetRadioEnabled(bool aEnabled,
 NS_IMETHODIMP
 MobileConnection::NotifyVoiceChanged()
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:NotifyVoiceChanged()");
   if (!CheckPermission("mobileconnection")) {
     return NS_OK;
   }
@@ -563,6 +594,7 @@ MobileConnection::NotifyVoiceChanged()
 NS_IMETHODIMP
 MobileConnection::NotifyDataChanged()
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:NotifyDataChanged()");
   if (!CheckPermission("mobileconnection")) {
     return NS_OK;
   }
@@ -574,6 +606,7 @@ NS_IMETHODIMP
 MobileConnection::NotifyUssdReceived(const nsAString& aMessage,
                                      bool aSessionEnded)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:NotifyUssdReceived()");
   if (!CheckPermission("mobileconnection")) {
     return NS_OK;
   }
@@ -593,6 +626,7 @@ MobileConnection::NotifyUssdReceived(const nsAString& aMessage,
 NS_IMETHODIMP
 MobileConnection::NotifyDataError(const nsAString& aMessage)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:NotifyDataError()");
   if (!CheckPermission("mobileconnection")) {
     return NS_OK;
   }
@@ -616,6 +650,7 @@ MobileConnection::NotifyCFStateChange(bool aSuccess,
                                       unsigned short aSeconds,
                                       unsigned short aServiceClass)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:NotifyCFStateChange()");
   if (!CheckPermission("mobileconnection")) {
     return NS_OK;
   }
@@ -637,6 +672,7 @@ NS_IMETHODIMP
 MobileConnection::NotifyEmergencyCbModeChanged(bool aActive,
                                                uint32_t aTimeoutMs)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:NotifyEmergencyCbModeChanged()");
   if (!CheckPermission("mobileconnection")) {
     return NS_OK;
   }
@@ -658,6 +694,7 @@ MobileConnection::NotifyEmergencyCbModeChanged(bool aActive,
 NS_IMETHODIMP
 MobileConnection::NotifyOtaStatusChanged(const nsAString& aStatus)
 {
+  printf_stderr("+++DBG++:MobiliConnection.cpp:NotifyOtaStatusChanged()");
   if (!CheckPermission("mobileconnection")) {
     return NS_OK;
   }

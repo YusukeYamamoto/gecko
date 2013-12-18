@@ -53,7 +53,7 @@ function createTCPError(aWindow, aErrorName, aErrorType) {
  * Debug logging function
  */
 
-let debug = false;
+let debug = true;
 function LOG(msg) {
   if (debug)
     dump("TCPSocket: " + msg + "\n");
@@ -370,29 +370,38 @@ TCPSocket.prototype = {
 #endif
 
   callListener: function ts_callListener(type, data) {
+    LOG("+++DBG++:TCPSocket.js:callListener()-S");
     if (!this["on" + type])
       return;
 
     this["on" + type].call(null, new TCPSocketEvent(type, this, data || ""));
+    LOG("+++DBG++:TCPSocket.js:callListener()-E");
   },
 
   /* nsITCPSocketInternal methods */
   callListenerError: function ts_callListenerError(type, name) {
     // XXX we're not really using TCPError at this time, so there's only a name
     // attribute to pass.
+    LOG("+++DBG++:TCPSocket.js:callListenerError()");
     this.callListener(type, createTCPError(this.useWin, name));
   },
 
   callListenerData: function ts_callListenerString(type, data) {
+    LOG("+++DBG++:TCPSocket.js:callListenerData()-S");
     this.callListener(type, data);
+    LOG("+++DBG++:TCPSocket.js:callListenerData()-E");
   },
 
   callListenerArrayBuffer: function ts_callListenerArrayBuffer(type, data) {
+    LOG("+++DBG++:TCPSocket.js:callListenerData()-S");
     this.callListener(type, data);
+    LOG("+++DBG++:TCPSocket.js:callListenerData()-E");
   },
 
   callListenerVoid: function ts_callListenerVoid(type) {
+    LOG("+++DBG++:TCPSocket.js:callListenerVoid()-S");
     this.callListener(type);
+    LOG("+++DBG++:TCPSocket.js:callListenerVoid()-E");
   },
 
   /**
@@ -400,19 +409,24 @@ TCPSocket.prototype = {
    * readyState.
    */
   updateReadyState: function ts_updateReadyState(readyState) {
+    LOG("+++DBG++:TCPSocket.js:updateReadyState()-S");
     if (!this._inChild) {
       LOG("Calling updateReadyState in parent, which should only be called " +
           "in child");
+      LOG("+++DBG++:TCPSocket.js:updateReadyState()-E_return");
       return;
     }
     this._readyState = readyState;
+    LOG("+++DBG++:TCPSocket.js:updateReadyState()-E");
   },
 
   updateBufferedAmount: function ts_updateBufferedAmount(bufferedAmount, trackingNumber) {
+    LOG("+++DBG++:TCPSocket.js:updateBufferedAmount()-S");
     if (trackingNumber != this._trackingNumber) {
       LOG("updateBufferedAmount is called but trackingNumber is not matched " +
           "parent's trackingNumber: " + trackingNumber + ", child's trackingNumber: " +
           this._trackingNumber);
+      LOG("+++DBG++:TCPSocket.js:updateBufferedAmount()-E_return");
       return;
     }
     this._bufferedAmount = bufferedAmount;
@@ -425,9 +439,11 @@ TCPSocket.prototype = {
       LOG("bufferedAmount is updated but haven't reaches zero. bufferedAmount: " +
           bufferedAmount);
     }
+    LOG("+++DBG++:TCPSocket.js:updateBufferedAmount()-E");
   },
 
   createAcceptedParent: function ts_createAcceptedParent(transport, binaryType) {
+    LOG("+++DBG++:TCPSocket.js:createAcceptedParent()-S");
     let that = new TCPSocket();
     that._transport = transport;
     that._initStream(binaryType);
@@ -437,10 +453,12 @@ TCPSocket.prototype = {
     that._inputStreamPump = new InputStreamPump(that._socketInputStream, -1, -1, 0, 0, false);
     that._inputStreamPump.asyncRead(that, null);
 
+    LOG("+++DBG++:TCPSocket.js:createAcceptedParent()-E");
     return that;
   },
 
   createAcceptedChild: function ts_createAcceptedChild(socketChild, binaryType, windowObject) {
+    LOG("+++DBG++:TCPSocket.js:createAcceptedChild()-S");
     let that = new TCPSocket();
 
     that._binaryType = binaryType;
@@ -449,24 +467,29 @@ TCPSocket.prototype = {
     socketChild.setSocketAndWindow(that, windowObject);
     that._socketBridge = socketChild;
 
+    LOG("+++DBG++:TCPSocket.js:createAcceptedChild()-E");
     return that;
   },
 
   setAppId: function ts_setAppId(appId) {
+    LOG("+++DBG++:TCPSocket.js:setAppId()-S");
 #ifdef MOZ_WIDGET_GONK
     this._appId = appId;
 #else
     // Do nothing because _appId only exists on Gonk-specific platform.
 #endif
+    LOG("+++DBG++:TCPSocket.js:setAppId()-E");
   },
 
   setOnUpdateBufferedAmountHandler: function(aFunction) {
+    LOG("+++DBG++:TCPSocket.js:setOnUpdateBufferedAmountHandler()-S");
     if (typeof(aFunction) == 'function') {
       this._onUpdateBufferedAmount = aFunction;
     } else {
       throw new Error("only function can be passed to " +
                       "setOnUpdateBufferedAmountHandler");
     }
+    LOG("+++DBG++:TCPSocket.js:setOnUpdateBufferedAmountHandler()-E");
   },
 
   /**
@@ -475,22 +498,28 @@ TCPSocket.prototype = {
    * This function is expected to be called by TCPSocketChild.
    */
   onRecvSendFromChild: function(data, byteOffset, byteLength, trackingNumber) {
+    LOG("+++DBG++:TCPSocket.js:onRecvSendFromChild()-S");
     this._trackingNumber = trackingNumber;
     this.send(data, byteOffset, byteLength);
+    LOG("+++DBG++:TCPSocket.js:onRecvSendFromChild()-E");
   },
 
   /* end nsITCPSocketInternal methods */
 
   initWindowless: function ts_initWindowless() {
+    LOG("+++DBG++:TCPSocket.js:initWindowless()-S");
     try {
       return Services.prefs.getBoolPref("dom.mozTCPSocket.enabled");
     } catch (e) {
       // no pref means return false
+      LOG("+++DBG++:TCPSocket.js:initWindowless()-E_return");
       return false;
     }
+    LOG("+++DBG++:TCPSocket.js:initWindowless()-E");
   },
 
   init: function ts_init(aWindow) {
+    LOG("+++DBG++:TCPSocket.js:init()-S");
     if (!this.initWindowless())
       return null;
 
@@ -511,9 +540,11 @@ TCPSocket.prototype = {
     this.useWin = XPCNativeWrapper.unwrap(aWindow);
     this.innerWindowID = util.currentInnerWindowID;
     LOG("window init: " + this.innerWindowID);
+    LOG("+++DBG++:TCPSocket.js:init()-E");
   },
 
   observe: function(aSubject, aTopic, aData) {
+    LOG("+++DBG++:TCPSocket.js:observe()-S");
     if (aTopic == "inner-window-destroyed") {
       let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
       if (wId == this.innerWindowID) {
@@ -534,10 +565,12 @@ TCPSocket.prototype = {
         this.close();
       }
     }
+    LOG("+++DBG++:TCPSocket.js:observe()-E");
   },
 
   // nsIDOMTCPSocket
   open: function ts_open(host, port, options) {
+    LOG("+++DBG++:TCPSocket.js:open()-S");
     this._inChild = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
                        .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
     LOG("content process: " + (this._inChild ? "true" : "false"));
@@ -578,6 +611,7 @@ TCPSocket.prototype = {
                              .createInstance(Ci.nsITCPSocketChild);
       that._socketBridge.sendOpen(that, host, port, !!that._ssl,
                                   that._binaryType, this.useWin, this.useWin || this);
+      LOG("+++DBG++:TCPSocket.js:open()-E_return");
       return that;
     }
 
@@ -595,15 +629,18 @@ TCPSocket.prototype = {
     }
 #endif
 
+    LOG("+++DBG++:TCPSocket.js:open()-E");
     return that;
   },
 
   upgradeToSecure: function ts_upgradeToSecure() {
+    LOG("+++DBG++:TCPSocket.js:upgradeToSecure()-S");
     if (this._readyState !== kOPEN) {
       throw new Error("Socket not open.");
     }
     if (this._ssl == 'ssl') {
       // Already SSL
+      LOG("+++DBG++:TCPSocket.js:upgradeToSecure()-E_return");
       return;
     }
 
@@ -611,6 +648,7 @@ TCPSocket.prototype = {
 
     if (this._inChild) {
       this._socketBridge.sendStartTLS();
+      LOG("+++DBG++:TCPSocket.js:upgradeToSecure()-E_return");
       return;
     }
 
@@ -619,11 +657,13 @@ TCPSocket.prototype = {
     } else {
       this._waitingForStartTLS = true;
     }
+    LOG("+++DBG++:TCPSocket.js:upgradeToSecure()-E");
   },
 
   listen: function ts_listen(localPort, options, backlog) {
     // in the testing case, init won't be called and
     // hasPrivileges will be null. We want to proceed to test.
+    LOG("+++DBG++:TCPSocket.js:listen()-S");
     if (this._hasPrivileges !== true && this._hasPrivileges !== null) {
       throw new Error("TCPSocket does not have permission in this context.\n");
     }
@@ -633,10 +673,12 @@ TCPSocket.prototype = {
     options = options || { binaryType : this.binaryType };
     backlog = backlog || -1;
     that.listen(localPort, options, backlog);
+    LOG("+++DBG++:TCPSocket.js:listen()-E");
     return that;
   },
 
   close: function ts_close() {
+    LOG("+++DBG++:TCPSocket.js:close()-S");
     if (this._readyState === kCLOSED || this._readyState === kCLOSING)
       return;
 
@@ -645,6 +687,7 @@ TCPSocket.prototype = {
 
     if (this._inChild) {
       this._socketBridge.sendClose();
+      LOG("+++DBG++:TCPSocket.js:close()-E_return");
       return;
     }
 
@@ -652,9 +695,11 @@ TCPSocket.prototype = {
       this._socketOutputStream.close();
     }
     this._socketInputStream.close();
+    LOG("+++DBG++:TCPSocket.js:close()-E");
   },
 
   send: function ts_send(data, byteOffset, byteLength) {
+    LOG("+++DBG++:TCPSocket.js:send()-S");
     if (this._readyState !== kOPEN) {
       throw new Error("Socket not open.");
     }
@@ -684,6 +729,7 @@ TCPSocket.prototype = {
       // In child, we just add buffer length to our bufferedAmount and let
       // parent to update our bufferedAmount when data have been sent.
       this._bufferedAmount = newBufferedAmount;
+      LOG("+++DBG++:TCPSocket.js:send()-E_return");
       return !bufferFull;
     }
 
@@ -712,12 +758,15 @@ TCPSocket.prototype = {
     this._saveNetworkStats(false);
 #endif
 
+    LOG("+++DBG++:TCPSocket.js:send()-E");
     return !bufferFull;
   },
 
   suspend: function ts_suspend() {
+    LOG("+++DBG++:TCPSocket.js:suspend()-S");
     if (this._inChild) {
       this._socketBridge.sendSuspend();
+      LOG("+++DBG++:TCPSocket.js:suspend()-E_return");
       return;
     }
 
@@ -726,11 +775,14 @@ TCPSocket.prototype = {
     } else {
       ++this._suspendCount;
     }
+    LOG("+++DBG++:TCPSocket.js:suspend()-E");
   },
 
   resume: function ts_resume() {
+    LOG("+++DBG++:TCPSocket.js:resume()-S");
     if (this._inChild) {
       this._socketBridge.sendResume();
+      LOG("+++DBG++:TCPSocket.js:resume()-E_return");
       return;
     }
 
@@ -741,9 +793,11 @@ TCPSocket.prototype = {
     } else {
       --this._suspendCount;
     }
+    LOG("+++DBG++:TCPSocket.js:resume()-E");
   },
 
   _maybeReportErrorAndCloseIfOpen: function(status) {
+    LOG("+++DBG++:TCPSocket.js:_maybeReportErrorAndCloseIfOpen()-S");
 #ifdef MOZ_WIDGET_GONK
     // Save network statistics once the connection is closed.
     // For now this function is Gonk-specific.
@@ -876,10 +930,12 @@ TCPSocket.prototype = {
       this.callListener("error", err);
     }
     this.callListener("close");
+    LOG("+++DBG++:TCPSocket.js:_maybeReportErrorAndCloseIfOpen()-E");
   },
 
   // nsITransportEventSink (Triggered by transport.setEventSink)
   onTransportStatus: function ts_onTransportStatus(
+    LOG("+++DBG++:TCPSocket.js:onTransportStatus()-S");
     transport, status, progress, max) {
     if (status === Ci.nsISocketTransport.STATUS_CONNECTED_TO) {
       this._readyState = kOPEN;
@@ -895,17 +951,20 @@ TCPSocket.prototype = {
 
       this._inputStreamPump.asyncRead(this, null);
     }
+    LOG("+++DBG++:TCPSocket.js:onTransportStatus()-E");
   },
 
   // nsIAsyncInputStream (Triggered by _socketInputStream.asyncWait)
   // Only used for detecting connection refused
   onInputStreamReady: function ts_onInputStreamReady(input) {
+    LOG("+++DBG++:TCPSocket.js:onInputStreamReady()-S");
     try {
       input.available();
     } catch (e) {
       // NS_ERROR_CONNECTION_REFUSED
       this._maybeReportErrorAndCloseIfOpen(0x804B000C);
     }
+    LOG("+++DBG++:TCPSocket.js:onInputStreamReady()-E");
   },
 
   // nsIRequestObserver (Triggered by _inputStreamPump.asyncRead)

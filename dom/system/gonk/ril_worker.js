@@ -114,6 +114,7 @@ let Buf = {
    * Process one parcel.
    */
   processParcel: function processParcel() {
+    debug("+++DBG++:ril_worker.js:processParcel()-S");
     let response_type = this.readInt32();
 
     let request_type, options;
@@ -126,6 +127,7 @@ let Buf = {
         if (DEBUG) {
           debug("Suspicious uninvited request found: " + token + ". Ignored!");
         }
+        debug("+++DBG++:ril_worker.js:processParcel()-E_return");
         return;
       }
 
@@ -146,6 +148,7 @@ let Buf = {
     }
 
     RIL.handleParcel(request_type, this.readAvailable, options);
+    debug("+++DBG++:ril_worker.js:processParcel()-E");
   },
 
   /**
@@ -158,6 +161,7 @@ let Buf = {
    *        original main thread message object that led to the RIL request.
    */
   newParcel: function newParcel(type, options) {
+    debug("+++DBG++:ril_worker.js:newParcel()-S");
     if (DEBUG) debug("New outgoing parcel of type " + type);
 
     // We're going to leave room for the parcel size at the beginning.
@@ -173,14 +177,17 @@ let Buf = {
     this.mTokenRequestMap[this.mToken] = options;
     this.mToken++;
     return this.mToken;
+    debug("+++DBG++:ril_worker.js:newParcel()-E");
   },
 
   simpleRequest: function simpleRequest(type, options) {
+    debug("+++DBG++:ril_worker.js:simpleRequest()");
     this.newParcel(type, options);
     this.sendParcel();
   },
 
   onSendParcel: function onSendParcel(parcel) {
+    debug("+++DBG++:ril_worker.js:onSendParcel()");
     postRILMessage(CLIENT_ID, parcel);
   }
 };
@@ -246,6 +253,7 @@ let RIL = {
   _receivedSmsCbPagesMap: {},
 
   initRILState: function initRILState() {
+    debug("+++DBG++:ril_worker.js:initRILState()-S");
     /**
      * One of the RADIO_STATE_* constants.
      */
@@ -384,6 +392,7 @@ let RIL = {
       MMI: cbmmi || null
     };
     this.mergedCellBroadcastConfig = null;
+    debug("+++DBG++:ril_worker.js:initRILState()-E");
   },
 
   /**
@@ -399,13 +408,17 @@ let RIL = {
    *        A number that represents the numeral system to be used. Default 10.
    */
   parseInt: function RIL_parseInt(string, defaultValue, radix) {
+    debug("+++DBG++:ril_worker.js:parseInt()-S");
     let number = parseInt(string, radix || 10);
     if (!isNaN(number)) {
+        debug("+++DBG++:ril_worker.js:parseInt()-E_return");
       return number;
     }
     if (defaultValue === undefined) {
+        debug("+++DBG++:ril_worker.js:parseInt()-E_return");
       defaultValue = null;
     }
+    debug("+++DBG++:ril_worker.js:parseInt()-E");
     return defaultValue;
   },
 
@@ -427,6 +440,7 @@ let RIL = {
    * Retrieve the ICC's status.
    */
   getICCStatus: function getICCStatus() {
+    debug("+++DBG++:ril_worker.js:getICCStatus()");
     Buf.simpleRequest(REQUEST_GET_SIM_STATUS);
   },
 
@@ -434,6 +448,7 @@ let RIL = {
    * Helper function for unlocking ICC locks.
    */
   iccUnlockCardLock: function iccUnlockCardLock(options) {
+    debug("+++DBG++:ril_worker.js:iccUnlockCardLock()-S");
     switch (options.lockType) {
       case GECKO_CARDLOCK_PIN:
         this.enterICCPIN(options);
@@ -466,6 +481,7 @@ let RIL = {
         options.success = false;
         this.sendChromeMessage(options);
     }
+    debug("+++DBG++:ril_worker.js:iccUnlockCardLock()-E");
   },
 
   /**
@@ -477,6 +493,7 @@ let RIL = {
    *        AID value.
    */
   enterICCPIN: function enterICCPIN(options) {
+    debug("+++DBG++:ril_worker.js:enterICCPIN()");
     Buf.newParcel(REQUEST_ENTER_SIM_PIN, options);
     Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 1 : 2);
     Buf.writeString(options.pin);
@@ -495,6 +512,7 @@ let RIL = {
    *        AID value.
    */
   enterICCPIN2: function enterICCPIN2(options) {
+    debug("+++DBG++:ril_worker.js:enterICCPIN2()");
     Buf.newParcel(REQUEST_ENTER_SIM_PIN2, options);
     Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 1 : 2);
     Buf.writeString(options.pin);
@@ -513,6 +531,7 @@ let RIL = {
    *        String containing the password.
    */
   enterDepersonalization: function enterDepersonalization(type, password, options) {
+    debug("+++DBG++:ril_worker.js:enterDepersonalization()");
     Buf.newParcel(REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE, options);
     Buf.writeInt32(type);
     Buf.writeString(password);
@@ -523,6 +542,7 @@ let RIL = {
    * Helper function for changing ICC locks.
    */
   iccSetCardLock: function iccSetCardLock(options) {
+    debug("+++DBG++:ril_worker.js:iccSetCardLock()-S");
     if (options.newPin !== undefined) { // Change PIN lock.
       switch (options.lockType) {
         case GECKO_CARDLOCK_PIN:
@@ -558,6 +578,7 @@ let RIL = {
                              ICC_SERVICE_CLASS_FAX;
       this.setICCFacilityLock(options);
     }
+    debug("+++DBG++:ril_worker.js:iccSetCardLock()-E");
   },
 
   /**
@@ -571,6 +592,7 @@ let RIL = {
    *        AID value.
    */
   changeICCPIN: function changeICCPIN(options) {
+    debug("+++DBG++:ril_worker.js:changeICCPIN()");
     Buf.newParcel(REQUEST_CHANGE_SIM_PIN, options);
     Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 2 : 3);
     Buf.writeString(options.pin);
@@ -592,6 +614,7 @@ let RIL = {
    *        AID value.
    */
   changeICCPIN2: function changeICCPIN2(options) {
+    debug("+++DBG++:ril_worker.js:changeICCPIN2()");
     Buf.newParcel(REQUEST_CHANGE_SIM_PIN2, options);
     Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 2 : 3);
     Buf.writeString(options.pin);
@@ -612,6 +635,7 @@ let RIL = {
    *        AID value.
    */
    enterICCPUK: function enterICCPUK(options) {
+     debug("+++DBG++:ril_worker.js:enterICCPUK()");
      Buf.newParcel(REQUEST_ENTER_SIM_PUK, options);
      Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 2 : 3);
      Buf.writeString(options.puk);
@@ -633,6 +657,7 @@ let RIL = {
    *        AID value.
    */
    enterICCPUK2: function enterICCPUK2(options) {
+     debug("+++DBG++:ril_worker.js:enterICCPUK2()");
      Buf.newParcel(REQUEST_ENTER_SIM_PUK2, options);
      Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 2 : 3);
      Buf.writeString(options.puk);
@@ -647,6 +672,7 @@ let RIL = {
    * Helper function for fetching the state of ICC locks.
    */
   iccGetCardLockState: function iccGetCardLockState(options) {
+    debug("+++DBG++:ril_worker.js:iccGetCardLockState()-S");
     switch (options.lockType) {
       case GECKO_CARDLOCK_PIN:
         options.facility = ICC_CB_FACILITY_SIM;
@@ -666,6 +692,7 @@ let RIL = {
                            ICC_SERVICE_CLASS_DATA  |
                            ICC_SERVICE_CLASS_FAX;
     this.queryICCFacilityLock(options);
+    debug("+++DBG++:ril_worker.js:iccGetCardLockState()-E");
   },
 
   /**
@@ -5186,7 +5213,8 @@ RIL.readSetupDataCall_v5 = function readSetupDataCall_v5(options) {
 };
 
 RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options) {
-  if (options.rilRequestError) {
+  console.log("+++DBG++:RadioInterfaceLayerjs:REQUEST_SETUP_DATA_CALL!!!!!!!");
+    if (options.rilRequestError) {
     // On Data Call generic errors, we shall notify caller
     this._sendDataCallError(options, options.rilRequestError);
     return;

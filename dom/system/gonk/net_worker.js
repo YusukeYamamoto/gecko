@@ -15,7 +15,7 @@
 
 "use strict";
 
-const DEBUG = false;
+const DEBUG = true;
 
 const PERSIST_SYS_USB_CONFIG_PROPERTY = "persist.sys.usb.config";
 const SYS_USB_CONFIG_PROPERTY         = "sys.usb.config";
@@ -376,6 +376,7 @@ function split(start, data, delimiter) {
  * Handle received data from netd.
  */
 function onNetdMessage(data) {
+  //console.trace();
   let result = split(0, data, 32);
   if (!result) {
     nextNetdCommand();

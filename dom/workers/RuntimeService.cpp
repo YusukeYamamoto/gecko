@@ -1098,6 +1098,9 @@ WorkerTaskRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 bool
 WorkerCrossThreadDispatcher::PostTask(WorkerTask* aTask)
 {
+#ifdef DEBUG
+  NS_WARNING("+++DBG++:RuntimeService.cpp:PostTask");
+#endif
   mozilla::MutexAutoLock lock(mMutex);
   if (!mPrivate) {
     return false;

@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/systemlibs.js");
 Cu.import("resource://gre/modules/WifiCommand.jsm");
 Cu.import("resource://gre/modules/WifiNetUtil.jsm");
 
-var DEBUG = false; // set to true to show debug messages.
+var DEBUG = true; // set to true to show debug messages.
 
 const WIFIWORKER_CONTRACTID = "@mozilla.org/wifi/worker;1";
 const WIFIWORKER_CID        = Components.ID("{a14e8977-d259-433a-a88d-58dd44657e5b}");
@@ -2978,6 +2978,7 @@ WifiWorker.prototype = {
   handle: function handle(aName, aResult) {
     switch(aName) {
       case SETTINGS_WIFI_ENABLED:
+        console.log("+++DBG++:WifiWorker.js:handle()_SETTINGS_WIFI_ENABLED called");
         this.handleWifiEnabled(aResult)
         break;
       case SETTINGS_WIFI_DEBUG_ENABLED:

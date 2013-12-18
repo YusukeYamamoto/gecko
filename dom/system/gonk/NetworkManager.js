@@ -90,7 +90,7 @@ const DEFAULT_DNS2                     = "8.8.4.4";
 const DEFAULT_WIFI_DHCPSERVER_STARTIP  = "192.168.1.10";
 const DEFAULT_WIFI_DHCPSERVER_ENDIP    = "192.168.1.30";
 
-const DEBUG = false;
+const DEBUG = true;
 
 function defineLazyRegExp(obj, name, pattern) {
   obj.__defineGetter__(name, function() {
@@ -104,6 +104,7 @@ function defineLazyRegExp(obj, name, pattern) {
  * adjusts routes etc. accordingly.
  */
 function NetworkManager() {
+  debug("+++DBG++:NetworkManager.js:NetworkManager()-S");
   this.networkInterfaces = {};
   Services.obs.addObserver(this, TOPIC_INTERFACE_STATE_CHANGED, true);
 #ifdef MOZ_B2G_RIL
@@ -169,6 +170,7 @@ function NetworkManager() {
   // Used in resolveHostname().
   defineLazyRegExp(this, "REGEXP_IPV4", "^\\d{1,3}(?:\\.\\d{1,3}){3}$");
   defineLazyRegExp(this, "REGEXP_IPV6", "^[\\da-fA-F]{4}(?::[\\da-fA-F]{4}){7}$");
+  debug("+++DBG++:NetworkManager.js:NetworkManager()-E");
 }
 NetworkManager.prototype = {
   classID:   NETWORKMANAGER_CID,
@@ -184,12 +186,14 @@ NetworkManager.prototype = {
   // nsIObserver
 
   observe: function observe(subject, topic, data) {
+    debug("+++DBG++:NetworkManager.js:observer()-S");
     switch (topic) {
       case TOPIC_INTERFACE_STATE_CHANGED:
         let network = subject.QueryInterface(Ci.nsINetworkInterface);
         debug("Network " + network.name + " changed state to " + network.state);
         switch (network.state) {
           case Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED:
+            debug("+++DBG++:NetworkManager.js:network.state is : Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED");
 #ifdef MOZ_B2G_RIL
             // Add host route for data calls
             if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
@@ -221,6 +225,7 @@ NetworkManager.prototype = {
               .notify(CaptivePortalDetectionHelper.EVENT_CONNECT, this.active);
             break;
           case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED:
+            debug("+++DBG++:NetworkManager.js:network.state is : Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED");
 #ifdef MOZ_B2G_RIL
             // Remove host route for data calls
             if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
@@ -257,26 +262,31 @@ NetworkManager.prototype = {
         break;
 #ifdef MOZ_B2G_RIL
       case TOPIC_INTERFACE_REGISTERED:
+        debug("+++DBG++:NetworkManager.js:topic is : TOPIC_INTERFACE_REGISTERED ");
         let regNetwork = subject.QueryInterface(Ci.nsINetworkInterface);
         // Add extra host route. For example, mms proxy or mmsc.
         this.setExtraHostRoute(regNetwork);
         break;
       case TOPIC_INTERFACE_UNREGISTERED:
+        debug("+++DBG++:NetworkManager.js:topic is : TTOPIC_INTERFACE_UNREGISTERED");
         let unregNetwork = subject.QueryInterface(Ci.nsINetworkInterface);
         // Remove extra host route. For example, mms proxy or mmsc.
         this.removeExtraHostRoute(unregNetwork);
         break;
 #endif
       case TOPIC_MOZSETTINGS_CHANGED:
+        debug("+++DBG++:NetworkManager.js:topic is : TTOPIC_MOZSETTINGS_CHANGED");
         let setting = JSON.parse(data);
         this.handle(setting.key, setting.value);
         break;
       case TOPIC_PREF_CHANGED:
+        debug("+++DBG++:NetworkManager.js:topic is : TOPIC_PREF_CHANGED");
         this._manageOfflineStatus =
           Services.prefs.getBoolPref(PREF_MANAGE_OFFLINE_STATUS);
         debug(PREF_MANAGE_OFFLINE_STATUS + " has changed to " + this._manageOfflineStatus);
         break;
       case TOPIC_XPCOM_SHUTDOWN:
+        debug("+++DBG++:NetworkManager.js:topic is : TTOPIC_XPCOM_SHUTDOWN");
         Services.obs.removeObserver(this, TOPIC_XPCOM_SHUTDOWN);
         Services.obs.removeObserver(this, TOPIC_MOZSETTINGS_CHANGED);
 #ifdef MOZ_B2G_RIL
@@ -286,9 +296,11 @@ NetworkManager.prototype = {
         Services.obs.removeObserver(this, TOPIC_INTERFACE_STATE_CHANGED);
         break;
     }
+    debug("+++DBG++:NetworkManager.js:observer()-E");
   },
 
   receiveMessage: function receiveMessage(aMsg) {
+    debug("+++DBG++:NetworkManager.js:receiveMessage()-S");
     switch (aMsg.name) {
       case "NetworkInterfaceList:ListInterface": {
 #ifdef MOZ_B2G_RIL
@@ -321,11 +333,13 @@ NetworkManager.prototype = {
         return interfaces;
       }
     }
+    debug("+++DBG++:NetworkManager.js:receiveMessage()-E");
   },
 
   // nsINetworkManager
 
   registerNetworkInterface: function registerNetworkInterface(network) {
+    debug("+++DBG++:NetworkManager.js:registerNetworkInterface()-S");
     if (!(network instanceof Ci.nsINetworkInterface)) {
       throw Components.Exception("Argument must be nsINetworkInterface.",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -349,9 +363,11 @@ NetworkManager.prototype = {
     this.setAndConfigureActive();
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_REGISTERED, null);
     debug("Network '" + network.name + "' registered.");
+    debug("+++DBG++:NetworkManager.js:registerNetworkInterface()-E");
   },
 
   unregisterNetworkInterface: function unregisterNetworkInterface(network) {
+    debug("+++DBG++:NetworkManager.js:unregisterNetworkInterface()-S");
     if (!(network instanceof Ci.nsINetworkInterface)) {
       throw Components.Exception("Argument must be nsINetworkInterface.",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -372,6 +388,7 @@ NetworkManager.prototype = {
     this.setAndConfigureActive();
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_UNREGISTERED, null);
     debug("Network '" + network.name + "' unregistered.");
+    debug("+++DBG++:NetworkManager.js:unregisterNetworkInterface()-E");
   },
 
   _manageOfflineStatus: true,
@@ -401,6 +418,7 @@ NetworkManager.prototype = {
   _activeInfo: null,
 
   overrideActive: function overrideActive(network) {
+    debug("+++DBG++:NetworkManager.js:overrideActive()-S");
 #ifdef MOZ_B2G_RIL
     if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
         network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
@@ -409,10 +427,12 @@ NetworkManager.prototype = {
 #endif
     this._overriddenActive = network;
     this.setAndConfigureActive();
+    debug("+++DBG++:NetworkManager.js:overrideActive()-E");
   },
 
 #ifdef MOZ_B2G_RIL
   setExtraHostRoute: function setExtraHostRoute(network) {
+    debug("+++DBG++:NetworkManager.js:setExtraHostRoute()-S");
     if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS) {
       if (!(network instanceof Ci.nsIRilNetworkInterface)) {
         debug("Network for MMS must be an instance of nsIRilNetworkInterface");
@@ -432,12 +452,15 @@ NetworkManager.prototype = {
 
       gNetworkService.addHostRouteWithResolve(network, mmsHosts);
     }
+    debug("+++DBG++:NetworkManager.js:setExtraHostRoute()-E");
   },
 
   removeExtraHostRoute: function removeExtraHostRoute(network) {
+    debug("+++DBG++:NetworkManager.js:removeExtraHostRoute()-S");
     if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS) {
       if (!(network instanceof Ci.nsIRilNetworkInterface)) {
         debug("Network for MMS must be an instance of nsIRilNetworkInterface");
+        debug("+++DBG++:NetworkManager.js:removeExtraHostRoute()-E_return");
         return;
       }
 
@@ -449,11 +472,13 @@ NetworkManager.prototype = {
       let mmsHosts = this.resolveHostname([network.mmsProxy, network.mmsc]);
       if (mmsHosts.length == 0) {
         debug("No valid hostnames can be removed. Stop removing host route.");
+        debug("+++DBG++:NetworkManager.js:removeExtraHostRoute()-E_return");
         return;
       }
 
       gNetworkService.removeHostRouteWithResolve(network, mmsHosts);
     }
+    debug("+++DBG++:NetworkManager.js:removeExtraHostRoute()-E");
   },
 #endif // MOZ_B2G_RIL
 
@@ -461,6 +486,7 @@ NetworkManager.prototype = {
    * Determine the active interface and configure it.
    */
   setAndConfigureActive: function setAndConfigureActive() {
+    debug("+++DBG++:NetworkManager.js:setAndConfigureActive()-S");
     debug("Evaluating whether active network needs to be changed.");
     let oldActive = this.active;
 
@@ -536,10 +562,12 @@ NetworkManager.prototype = {
     if (this._manageOfflineStatus) {
       Services.io.offline = !this.active;
     }
+    debug("+++DBG++:NetworkManager.js:setAndConfigureActive()-E");
   },
 
 #ifdef MOZ_B2G_RIL
   resolveHostname: function resolveHostname(hosts) {
+    debug("+++DBG++:NetworkManager.js:resolveHostname()-S");
     let retval = [];
 
     for (let hostname of hosts) {
@@ -570,6 +598,7 @@ NetworkManager.prototype = {
       } catch (e) {}
     }
 
+    debug("+++DBG++:NetworkManager.js:resolveHostname()-E");
     return retval;
   },
 #endif
@@ -579,6 +608,7 @@ NetworkManager.prototype = {
   tetheringSettings: {},
 
   initTetheringSettings: function initTetheringSettings() {
+    debug("+++DBG++:NetworkManager.js:initTetheringSettings()-S");
     this.tetheringSettings[SETTINGS_USB_ENABLED] = false;
     this.tetheringSettings[SETTINGS_USB_IP] = DEFAULT_USB_IP;
     this.tetheringSettings[SETTINGS_USB_PREFIX] = DEFAULT_USB_PREFIX;
@@ -589,11 +619,13 @@ NetworkManager.prototype = {
 
     this.tetheringSettings[SETTINGS_WIFI_DHCPSERVER_STARTIP] = DEFAULT_WIFI_DHCPSERVER_STARTIP;
     this.tetheringSettings[SETTINGS_WIFI_DHCPSERVER_ENDIP]   = DEFAULT_WIFI_DHCPSERVER_ENDIP;
+    debug("+++DBG++:NetworkManager.js:initTetheringSettings()-E");
   },
 
   _requestCount: 0,
 
   handle: function handle(aName, aResult) {
+    debug("+++DBG++:NetworkManager.js:handle()-S");
     switch(aName) {
       case SETTINGS_USB_ENABLED:
         this._oldUsbTetheringEnabledState = this.tetheringSettings[SETTINGS_USB_ENABLED];
@@ -631,6 +663,7 @@ NetworkManager.prototype = {
         }
         break;
     };
+    debug("+++DBG++:NetworkManager.js:handle()-E");
   },
 
   handleError: function handleError(aErrorMessage) {
@@ -678,9 +711,11 @@ NetworkManager.prototype = {
   },
 
   handleUSBTetheringToggle: function handleUSBTetheringToggle(enable) {
+    debug("+++DBG++:NetworkManager.js:handleUSBTetheringToggle()-S");
     if (!enable) {
       this.tetheringSettings[SETTINGS_USB_ENABLED] = false;
       gNetworkService.enableUsbRndis(false, this.enableUsbRndisResult.bind(this));
+      debug("+++DBG++:NetworkManager.js:handleUSBTetheringToggle()-E_return");
       return;
     }
 
@@ -694,9 +729,11 @@ NetworkManager.prototype = {
     }
     this.tetheringSettings[SETTINGS_USB_ENABLED] = true;
     gNetworkService.enableUsbRndis(true, this.enableUsbRndisResult.bind(this));
+    debug("+++DBG++:NetworkManager.js:handleUSBTetheringToggle()-E");
   },
 
   getUSBTetheringParameters: function getUSBTetheringParameters(enable, tetheringinterface) {
+    debug("+++DBG++:NetworkManager.js:getUSBTetheringParameters()-S");
     let interfaceIp;
     let prefix;
     let wifiDhcpStartIp;
@@ -722,6 +759,7 @@ NetworkManager.prototype = {
         wifiDhcpStartIp == "" || wifiDhcpEndIp == "" ||
         usbDhcpStartIp == "" || usbDhcpEndIp == "") {
       debug("Invalid subnet information.");
+      debug("+++DBG++:NetworkManager.js:getUSBTetheringParameters()-E_return");
       return null;
     }
 
@@ -740,9 +778,11 @@ NetworkManager.prototype = {
       enable: enable,
       link: enable ? NETWORK_INTERFACE_UP : NETWORK_INTERFACE_DOWN
     };
+    debug("+++DBG++:NetworkManager.js:getUSBTetheringParameters()-E");
   },
 
   notifyError: function notifyError(resetSettings, callback, msg) {
+    debug("+++DBG++:NetworkManager.js:notifyError()-S");
     if (resetSettings) {
       let settingsLock = gSettingsService.createLock();
       // Disable wifi tethering with a useful error message for the user.
@@ -754,17 +794,21 @@ NetworkManager.prototype = {
     if (callback) {
       callback.wifiTetheringEnabledChange(msg);
     }
+    debug("+++DBG++:NetworkManager.js:notifyError()-E");
   },
 
   // Enable/disable WiFi tethering by sending commands to netd.
   setWifiTethering: function setWifiTethering(enable, network, config, callback) {
+    debug("+++DBG++:NetworkManager.js:setWifiTethering()-S");
     if (!network) {
       this.notifyError(true, callback, "invalid network information");
+      debug("+++DBG++:NetworkManager.js:setWifiTethering()-E_return");
       return;
     }
 
     if (!config) {
       this.notifyError(true, callback, "invalid configuration");
+      debug("+++DBG++:NetworkManager.js:setWifiTethering()-E_return");
       return;
     }
 
@@ -784,31 +828,37 @@ NetworkManager.prototype = {
       let resetSettings = error;
       this.notifyError(resetSettings, callback, error);
     }).bind(this));
+    debug("+++DBG++:NetworkManager.js:setWifiTethering()-E");
   },
 
   // Enable/disable USB tethering by sending commands to netd.
   setUSBTethering: function setUSBTethering(enable,
                                             tetheringInterface,
                                             callback) {
+    debug("+++DBG++:NetworkManager.js:setUSBTethering()-S");
     let params = this.getUSBTetheringParameters(enable, tetheringInterface);
 
     if (params === null) {
       gNetworkService.enableUsbRndis(false, function() {
         this.usbTetheringResultReport("Invalid parameters");
       });
+      debug("+++DBG++:NetworkManager.js:setUSBTethering()-E_return");
       return;
     }
 
     gNetworkService.setUSBTethering(enable, params, callback);
+    debug("+++DBG++:NetworkManager.js:setUSBTethering()-E");
   },
 
   getUsbInterface: function getUsbInterface() {
     // Find the rndis interface.
+    debug("+++DBG++:NetworkManager.js:getUsbInterface()-S");
     for (let i = 0; i < this.possibleInterface.length; i++) {
       try {
         let file = new FileUtils.File(KERNEL_NETWORK_ENTRY + "/" +
                                       this.possibleInterface[i]);
         if (file.exists()) {
+            debug("+++DBG++:NetworkManager.js:getUsbInterface()-E_return");
           return this.possibleInterface[i];
         }
       } catch (e) {
@@ -816,10 +866,12 @@ NetworkManager.prototype = {
       }
     }
     debug("Can't find rndis interface in possible lists.");
+    debug("+++DBG++:NetworkManager.js:getUsbInterface()-E");
     return DEFAULT_USB_INTERFACE_NAME;
   },
 
   enableUsbRndisResult: function enableUsbRndisResult(success, enable) {
+    debug("+++DBG++:NetworkManager.js:enableUsbRndisResult()-S");
     if (success) {
       this._tetheringInterface[TETHERING_TYPE_USB].internalInterface = this.getUsbInterface();
       this.setUSBTethering(enable,
@@ -829,9 +881,11 @@ NetworkManager.prototype = {
       this.usbTetheringResultReport("Failed to set usb function");
       throw new Error("failed to set USB Function to adb");
     }
+    debug("+++DBG++:NetworkManager.js:enableUsbRndisResult()-E");
   },
 
   usbTetheringResultReport: function usbTetheringResultReport(error) {
+    debug("+++DBG++:NetworkManager.js:usbTetheringResultReport()-S");
     let settingsLock = gSettingsService.createLock();
 
     this._usbTetheringAction = TETHERING_STATE_IDLE;
@@ -844,9 +898,11 @@ NetworkManager.prototype = {
     } else {
       this.handleLastRequest();
     }
+    debug("+++DBG++:NetworkManager.js:usbTetheringResultReport()-E");
   },
 
   onConnectionChangedReport: function onConnectionChangedReport(success, externalIfname) {
+    debug("+++DBG++:NetworkManager.js:onConnectionChangedReport()-S");
     debug("onConnectionChangedReport result: success " + success);
 
     if (success) {
@@ -854,22 +910,27 @@ NetworkManager.prototype = {
       this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = externalIfname;
       debug("Change the interface name to " + externalIfname);
     }
+    debug("+++DBG++:NetworkManager.js:onConnectionChangedReport()-E");
   },
 
   onConnectionChanged: function onConnectionChanged(network) {
+    debug("+++DBG++:NetworkManager.js:onConnectionChanged()-S");
     if (network.state != Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED) {
       debug("We are only interested in CONNECTED event");
+      debug("+++DBG++:NetworkManager.js:onConnectionChanged()-E_return");
       return;
     }
 
     if (!this.tetheringSettings[SETTINGS_USB_ENABLED]) {
       debug("Usb tethering settings is not enabled");
+      debug("+++DBG++:NetworkManager.js:onConnectionChanged()-E_return");
       return;
     }
 
     if (this._tetheringInterface[TETHERING_TYPE_USB].externalInterface ===
         this.active.name) {
       debug("The active interface is the same");
+      debug("+++DBG++:NetworkManager.js:onConnectionChanged()-E_return");
       return;
     }
 
@@ -892,10 +953,12 @@ NetworkManager.prototype = {
     if (this._usbTetheringAction === TETHERING_STATE_ONGOING) {
       debug("Postpone the event and handle it when state is idle.");
       this.wantConnectionEvent = callback;
+      debug("+++DBG++:NetworkManager.js:onConnectionChanged()-E_return");
       return;
     }
     this.wantConnectionEvent = null;
 
+    debug("+++DBG++:NetworkManager.js:onConnectionChanged()-E_return");
     callback.call(this);
   }
 };

@@ -6,7 +6,7 @@
 
 this.EXPORTED_SYMBOLS = ['NetworkStatsDB'];
 
-const DEBUG = false;
+const DEBUG = true;
 function debug(s) { dump("-*- NetworkStatsDB: " + s + "\n"); }
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;

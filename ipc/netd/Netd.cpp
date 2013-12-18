@@ -102,7 +102,9 @@ NetdClient::~NetdClient()
 bool
 NetdClient::OpenSocket()
 {
-  mSocket.rwget() = socket_local_client("netd",
+
+  LOG("++DBG++:Cetd.cpp:SOpenSocket()-S");
+    mSocket.rwget() = socket_local_client("netd",
                                         ANDROID_SOCKET_NAMESPACE_RESERVED,
                                         SOCK_STREAM);
   if (mSocket.rwget() < 0) {
@@ -144,12 +146,14 @@ NetdClient::OpenSocket()
                           this);
   }
 
+  LOG("++DBG++:Cetd.cpp:SOpenSocket()-E");
   LOG("Connected to netd");
   return true;
 }
 
 void NetdClient::OnLineRead(int aFd, nsDependentCSubstring& aMessage)
 {
+  LOG("++DBG++:Cetd.cpp:OnLineRead()-S");
   // Set errno to 0 first. For preventing to use the stale version of errno.
   errno = 0;
   // We found a line terminator. Each line is formatted as an
@@ -167,11 +171,13 @@ void NetdClient::OnLineRead(int aFd, nsDependentCSubstring& aMessage)
   if (!responseCode) {
     LOG("Can't parse netd's response");
   }
+  LOG("++DBG++:Cetd.cpp:OnLineRead()-E");
 }
 
 void
 NetdClient::OnFileCanWriteWithoutBlocking(int aFd)
 {
+  LOG("++DBG++:Cetd.cpp:OnFileCanWriteWithoutBlocking()");
   MOZ_ASSERT(aFd == mSocket.get());
   WriteNetdCommand();
 }
@@ -179,6 +185,7 @@ NetdClient::OnFileCanWriteWithoutBlocking(int aFd)
 void
 NetdClient::OnError()
 {
+  LOG("++DBG++:Cetd.cpp:OnError()-S");
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
   mReadWatcher.StopWatchingFileDescriptor();
@@ -192,6 +199,7 @@ NetdClient::OnError()
     mOutgoingQ.pop();
   }
   Start();
+  LOG("++DBG++:Cetd.cpp:OnError()-E");
 }
 
 // static
@@ -199,6 +207,8 @@ void
 NetdClient::Start()
 {
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
+  LOG("++DBG++:Netd.cpp:Start()-S");
 
   if (!gNetdClient) {
     LOG("Netd Client is not initialized");
@@ -217,8 +227,11 @@ NetdClient::Start()
       PostDelayedTask(FROM_HERE,
                       NewRunnableFunction(NetdClient::Start),
                       1000);
+    LOG("++DBG++:Netd.cpp:Start()-E_break");
+
     return;
   }
+  LOG("++DBG++:Netd.cpp:Start()-E");
   gNetdClient->mReConnectTimes = 0;
 }
 
